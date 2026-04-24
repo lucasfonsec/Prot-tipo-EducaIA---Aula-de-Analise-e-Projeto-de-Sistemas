@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EducaIA — Protótipo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  body { background: #f0eff8; min-height: 100vh; padding: 20px; }
+  :root {
+    --purple: #7F77DD; --purple-light: #EEEDFE; --purple-dark: #534AB7; --purple-darker: #3C3489;
+    --gray-bg: #F8F7FF; --white: #ffffff;
+    --text: #1a1a2e; --text-muted: #888780; --text-light: #b4b2a9;
+    --success: #1D9E75; --success-light: #E1F5EE;
+    --danger: #D85A30; --danger-light: #FAECE7;
+    --border: rgba(0,0,0,0.08);
+    --radius: 16px; --radius-sm: 10px; --radius-xs: 8px;
+  }
+  .app { max-width: 430px; margin: 0 auto; background: var(--gray-bg); border-radius: 24px; overflow: hidden; box-shadow: 0 8px 40px rgba(127,119,221,0.18); }
+  .nav-bar { display: flex; gap: 6px; padding: 12px 16px; background: var(--white); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .nav-btn { padding: 6px 11px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--white); font-size: 11px; color: var(--text-muted); cursor: pointer; transition: all 0.18s; white-space: nowrap; }
+  .nav-btn.active { background: var(--purple); color: white; border-color: var(--purple); font-weight: 500; }
+  .nav-btn:hover { border-color: var(--purple); color: var(--purple); }
+  .screen { display: none; min-height: 720px; }
+  .screen.active { display: flex; flex-direction: column; }
+  .phone { background: var(--white); border-radius: var(--radius); margin: 12px; overflow: hidden; flex: 1; box-shadow: 0 2px 16px rgba(127,119,221,0.10); position: relative; }
+  .status-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px 4px; font-size: 11px; font-weight: 500; color: var(--text); }
+  .pill-bar { background: #000; width: 60px; height: 3px; border-radius: 3px; margin: 0 auto 2px; }
+  .content { padding: 0 20px; flex: 1; }
+  .header-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; }
+  .back-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--gray-bg); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; }
+  .logo { font-size: 18px; font-weight: 600; color: var(--purple); letter-spacing: -0.5px; }
+  .logo span { color: var(--text); }
+  .tag { display: inline-block; background: var(--purple-light); color: var(--purple-dark); font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 20px; }
+  .cta-btn { display: block; width: 100%; padding: 16px; background: var(--purple); color: white; border: none; border-radius: var(--radius); font-size: 16px; font-weight: 600; cursor: pointer; text-align: center; transition: transform 0.1s, background 0.15s; letter-spacing: -0.2px; }
+  .cta-btn:active { transform: scale(0.97); background: var(--purple-dark); }
+  .cta-btn.secondary { background: var(--white); color: var(--purple); border: 1.5px solid var(--purple); }
+  .cta-btn.ghost { background: transparent; color: var(--text-muted); border: none; font-size: 14px; font-weight: 400; }
+  .cta-btn.success-btn { background: var(--success); }
+  .progress-dots { display: flex; gap: 6px; justify-content: center; }
+  .dot { width: 8px; height: 8px; border-radius: 4px; background: #e0dff8; }
+  .dot.active { background: var(--purple); width: 20px; }
+  .card { background: var(--gray-bg); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); }
+  .card-white { background: var(--white); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); }
+  .avatar-ring { width: 52px; height: 52px; border-radius: 50%; background: var(--purple-light); display: flex; align-items: center; justify-content: center; font-size: 22px; border: 2px solid var(--purple-light); }
+  .option-pill { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--white); margin-bottom: 10px; cursor: pointer; transition: all 0.15s; }
+  .option-pill.selected { border-color: var(--purple); background: var(--purple-light); }
+  .option-pill .icon { width: 36px; height: 36px; border-radius: 10px; background: var(--purple-light); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .option-pill .label { font-size: 15px; font-weight: 500; color: var(--text); }
+  .option-pill .sub { font-size: 12px; color: var(--text-muted); }
+  .option-pill.selected .label { color: var(--purple-dark); }
+  .input-field { width: 100%; padding: 14px 16px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--gray-bg); font-size: 15px; color: var(--text); outline: none; margin-bottom: 12px; }
+  .input-field:focus { border-color: var(--purple); background: var(--white); }
+  .input-label { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .task-item { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+  .check-circle { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .check-circle.done { background: var(--success); border-color: var(--success); }
+  .check-circle.done::after { content: '✓'; color: white; font-size: 11px; font-weight: 700; }
+  .task-text { font-size: 14px; color: var(--text); }
+  .task-text.done { color: var(--text-muted); text-decoration: line-through; }
+  .task-time { margin-left: auto; font-size: 12px; color: var(--text-muted); }
+  .day-tag { display: inline-block; background: var(--purple-light); color: var(--purple-dark); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; }
+  .day-tag.green { background: var(--success-light); color: var(--success); }
+  .progress-bar { height: 8px; background: var(--gray-bg); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--purple); border-radius: 4px; transition: width 0.3s; }
+  .progress-fill.green { background: var(--success); }
+  .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-box { background: var(--gray-bg); border-radius: var(--radius-sm); padding: 13px; border: 1px solid var(--border); }
+  .stat-num { font-size: 22px; font-weight: 600; color: var(--text); line-height: 1.2; }
+  .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .bottom-nav { display: flex; justify-content: space-around; padding: 12px 0 4px; border-top: 1px solid var(--border); background: var(--white); }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: var(--text-muted); cursor: pointer; }
+  .nav-item.active { color: var(--purple); }
+  .nav-icon { font-size: 20px; }
+  .streak-badge { display: flex; align-items: center; gap: 6px; background: #FFF8E7; border: 1px solid #FAC775; border-radius: 20px; padding: 6px 12px; }
+  .loading-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--purple); animation: pulse 1.2s ease-in-out infinite; }
+  .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,60%,100%{opacity:0.3;transform:scale(0.8)} 30%{opacity:1;transform:scale(1)} }
+  .ai-bubble { background: var(--purple-light); border-radius: 14px 14px 14px 2px; padding: 12px 14px; font-size: 14px; color: var(--purple-darker); line-height: 1.5; margin-bottom: 12px; }
+  .success-icon { width: 80px; height: 80px; border-radius: 50%; background: var(--success-light); display: flex; align-items: center; justify-content: center; font-size: 38px; margin: 0 auto 16px; border: 3px solid var(--success); }
+  .error-icon { width: 80px; height: 80px; border-radius: 50%; background: var(--danger-light); display: flex; align-items: center; justify-content: center; font-size: 38px; margin: 0 auto 16px; border: 3px solid var(--danger); }
+  .chip { display: inline-block; background: var(--purple-light); color: var(--purple-dark); font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 20px; margin: 3px; }
+  .time-chip { background: var(--success-light); color: var(--success); }
+  .diff-chip { background: #FAEEDA; color: #BA7517; }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+  .hero-ilu { width: 100%; height: 160px; border-radius: var(--radius); background: linear-gradient(135deg, var(--purple-light) 0%, #e8e6ff 100%); display: flex; align-items: center; justify-content: center; margin-bottom: 24px; overflow: hidden; position: relative; }
+  .onb-step { text-align: center; padding: 20px; }
+  .onb-icon { font-size: 56px; margin-bottom: 16px; }
+  .plan-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 14px; }
+  .plan-day { aspect-ratio: 1; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; color: var(--text-muted); gap: 2px; border: 1px solid var(--border); }
+  .plan-day .d-letter { font-size: 9px; font-weight: 600; text-transform: uppercase; }
+  .plan-day.has-task { background: var(--purple-light); border-color: var(--purple-light); color: var(--purple-dark); }
+  .plan-day.today { background: var(--purple); color: white; border-color: var(--purple); }
+  .plan-day.rest { background: var(--gray-bg); }
+  .plan-day .d-tasks { font-size: 8px; color: var(--purple); }
+  .plan-day.today .d-tasks { color: rgba(255,255,255,0.8); }
+  .slide-in { animation: slideIn 0.28s cubic-bezier(0.34,1.2,0.64,1) both; }
+  @keyframes slideIn { from{transform:translateY(12px);opacity:0} to{transform:translateY(0);opacity:1} }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="nav-bar">
+    <button class="nav-btn active" onclick="showScreen('discovery')">1. Descoberta</button>
+    <button class="nav-btn" onclick="showScreen('signup')">2. Cadastro</button>
+    <button class="nav-btn" onclick="showScreen('onboarding')">3. Onboarding</button>
+    <button class="nav-btn" onclick="showScreen('dashboard')">4. Dashboard</button>
+    <button class="nav-btn" onclick="showScreen('create')">5. Criar plano</button>
+    <button class="nav-btn" onclick="showScreen('loading')">6. Loading IA</button>
+    <button class="nav-btn" onclick="showScreen('success')">7. Sucesso</button>
+    <button class="nav-btn" onclick="showScreen('edit')">8. Editar plano</button>
+    <button class="nav-btn" onclick="showScreen('empty')">9. Vazio</button>
+    <button class="nav-btn" onclick="showScreen('error')">10. Erro</button>
+    <button class="nav-btn" onclick="showScreen('return')">11. Retorno</button>
+  </div>
+
+  <!-- SCREEN 1: DISCOVERY -->
+  <div id="screen-discovery" class="screen active">
+    <div class="phone">
+      <div class="pill-bar" style="margin-top:10px;"></div>
+      <div style="padding:20px 20px 0;">
+        <div class="logo">Educa<span>IA</span></div>
+      </div>
+      <div class="hero-ilu" style="margin:16px 20px 0; height:200px;">
+        <svg width="200" height="140" viewBox="0 0 200 140">
+          <circle cx="100" cy="70" r="50" fill="#7F77DD" opacity="0.12"/>
+          <circle cx="100" cy="70" r="36" fill="#7F77DD" opacity="0.18"/>
+          <rect x="68" y="44" width="64" height="52" rx="8" fill="#7F77DD" opacity="0.9"/>
+          <rect x="75" y="54" width="50" height="6" rx="3" fill="white" opacity="0.9"/>
+          <rect x="75" y="64" width="36" height="4" rx="2" fill="white" opacity="0.6"/>
+          <rect x="75" y="72" width="42" height="4" rx="2" fill="white" opacity="0.6"/>
+          <rect x="75" y="80" width="28" height="4" rx="2" fill="white" opacity="0.6"/>
+          <circle cx="140" cy="40" r="16" fill="#534AB7" opacity="0.85"/>
+          <text x="140" y="45" text-anchor="middle" font-size="14" fill="white">✦</text>
+          <circle cx="62" cy="48" r="10" fill="#AFA9EC" opacity="0.7"/>
+          <text x="62" y="52" text-anchor="middle" font-size="9" fill="white">📚</text>
+          <circle cx="148" cy="105" r="12" fill="#9FE1CB" opacity="0.8"/>
+          <text x="148" y="109" text-anchor="middle" font-size="10" fill="#0F6E56">✓</text>
+        </svg>
+      </div>
+      <div class="content slide-in" style="padding-top:24px;">
+        <div class="tag" style="margin-bottom:12px;">✦ IA adaptativa para estudar melhor</div>
+        <h1 style="font-size:26px;font-weight:700;line-height:1.25;color:var(--text);margin-bottom:10px;letter-spacing:-0.8px;">Seu plano de estudos feito em<br><span style="color:var(--purple);">menos de 2 minutos</span></h1>
+        <p style="font-size:15px;color:var(--text-muted);line-height:1.6;margin-bottom:28px;">A IA cria, organiza e adapta tudo para o seu ritmo. Chega de planilhas complicadas.</p>
+        <button class="cta-btn" onclick="showScreen('signup')">Começar agora — é grátis</button>
+        <button class="cta-btn ghost" style="margin-top:8px;" onclick="showScreen('signup')">Já tenho conta</button>
+        <div style="display:flex;gap:16px;justify-content:center;margin-top:24px;margin-bottom:8px;">
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--text);">12k+</div><div style="font-size:11px;color:var(--text-muted);">estudantes</div></div>
+          <div style="width:1px;background:var(--border);"></div>
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--text);">4.9★</div><div style="font-size:11px;color:var(--text-muted);">avaliação</div></div>
+          <div style="width:1px;background:var(--border);"></div>
+          <div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--text);">94%</div><div style="font-size:11px;color:var(--text-muted);">aprovação</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: SIGNUP -->
+  <div id="screen-signup" class="screen">
+    <div class="phone">
+      <div class="pill-bar" style="margin-top:10px;"></div>
+      <div class="header-bar">
+        <button class="back-btn" onclick="showScreen('discovery')">←</button>
+        <div class="logo">Educa<span>IA</span></div>
+        <div style="width:32px;"></div>
+      </div>
+      <div class="content slide-in" style="padding-top:16px;">
+        <h2 style="font-size:22px;font-weight:700;color:var(--text);letter-spacing:-0.5px;margin-bottom:4px;">Boas-vindas! 👋</h2>
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:24px;">Crie sua conta em segundos</p>
+        <button class="cta-btn secondary" style="margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <span style="font-size:18px;">G</span> Continuar com Google
+        </button>
+        <button class="cta-btn secondary" style="margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <span style="font-size:18px;">✉</span> Continuar com e-mail
+        </button>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
+          <div style="flex:1;height:1px;background:var(--border);"></div>
+          <span style="font-size:12px;color:var(--text-muted);">ou preencha</span>
+          <div style="flex:1;height:1px;background:var(--border);"></div>
+        </div>
+        <div class="input-label">Nome</div>
+        <input class="input-field" placeholder="Seu nome completo" />
+        <div class="input-label">E-mail institucional</div>
+        <input class="input-field" placeholder="usuario@universidade.edu.br" />
+        <div class="input-label">Senha</div>
+        <input class="input-field" type="password" placeholder="Mínimo 8 caracteres" />
+        <button class="cta-btn" style="margin-top:8px;" onclick="showScreen('onboarding')">Criar conta</button>
+        <p style="font-size:11px;color:var(--text-light);text-align:center;margin-top:16px;line-height:1.5;">Ao continuar você concorda com os <span style="color:var(--purple);">Termos de uso</span> e <span style="color:var(--purple);">Privacidade</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: ONBOARDING -->
+  <div id="screen-onboarding" class="screen">
+    <div class="phone" style="display:flex;flex-direction:column;">
+      <div class="pill-bar" style="margin-top:10px;"></div>
+      <div class="header-bar">
+        <button class="back-btn" onclick="showScreen('signup')">←</button>
+        <div class="progress-dots">
+          <div class="dot active" id="ob-d1"></div>
+          <div class="dot" id="ob-d2"></div>
+          <div class="dot" id="ob-d3"></div>
+        </div>
+        <button class="cta-btn ghost" style="width:auto;padding:4px 0;font-size:13px;" onclick="showScreen('dashboard')">Pular</button>
+      </div>
+      <div class="content slide-in" id="onb-content">
+        <div class="onb-step">
+          <div class="onb-icon">🎓</div>
+          <h2 style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:10px;letter-spacing:-0.5px;">O que você está estudando?</h2>
+          <p style="font-size:14px;color:var(--text-muted);margin-bottom:24px;line-height:1.6;">Isso ajuda a IA a personalizar seu plano</p>
+        </div>
+        <div class="option-pill selected" onclick="selectPill(this)">
+          <div class="icon">💻</div>
+          <div><div class="label">Ciência da Computação</div><div class="sub">Programação, algoritmos, etc</div></div>
+        </div>
+        <div class="option-pill" onclick="selectPill(this)">
+          <div class="icon">⚕️</div>
+          <div><div class="label">Medicina / Saúde</div><div class="sub">Anatomia, fisiologia, etc</div></div>
+        </div>
+        <div class="option-pill" onclick="selectPill(this)">
+          <div class="icon">⚖️</div>
+          <div><div class="label">Direito</div><div class="sub">Legislação, jurisprudência, etc</div></div>
+        </div>
+        <div class="option-pill" onclick="selectPill(this)">
+          <div class="icon">📐</div>
+          <div><div class="label">Engenharia</div><div class="sub">Exatas, cálculo, física</div></div>
+        </div>
+        <div class="option-pill" onclick="selectPill(this)">
+          <div class="icon">✏️</div>
+          <div><div class="label">Outro curso</div><div class="sub">Humanas, artes, etc</div></div>
+        </div>
+      </div>
+      <div style="padding:0 20px 24px;">
+        <button class="cta-btn" id="ob-btn" onclick="nextOnboarding()">Continuar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: DASHBOARD -->
+  <div id="screen-dashboard" class="screen">
+    <div class="phone" style="display:flex;flex-direction:column;">
+      <div class="pill-bar" style="margin-top:10px;"></div>
+      <div class="header-bar">
+        <div>
+          <div style="font-size:12px;color:var(--text-muted);">Bom dia ✨</div>
+          <div style="font-size:16px;font-weight:600;color:var(--text);">Ana Clara</div>
+        </div>
+        <div class="streak-badge">
+          <span style="font-size:14px;">🔥</span>
+          <span style="font-size:13px;font-weight:600;color:#BA7517;">7 dias</span>
+        </div>
+      </div>
+      <div class="content slide-in" style="overflow-y:auto;flex:1;">
+        <div class="stat-row">
+          <div class="stat-box">
+            <div class="stat-num" style="color:var(--purple);">68%</div>
+            <div class="stat-label">Progresso semanal</div>
+            <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" style="width:68%;"></div></div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num">3/5</div>
+            <div class="stat-label">Tarefas de hoje</div>
+            <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill green" style="width:60%;"></div></div>
+          </div>
+        </div>
+        <div class="card-white" style="margin-bottom:14px;">
+          <button class="cta-btn" onclick="showScreen('create')">+ Novo plano de estudos</button>
+          <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:8px;">A IA cria em menos de 30 segundos</p>
+        </div>
+        <div class="section-title">Tarefas de hoje · Seg</div>
+        <div class="task-item">
+          <div class="check-circle done"></div>
+          <div><div class="task-text done">Revisão de Algoritmos Cap. 4</div><div style="font-size:11px;color:var(--text-muted);">Estruturas de dados</div></div>
+          <span class="task-time">30min</span>
+        </div>
+        <div class="task-item">
+          <div class="check-circle done"></div>
+          <div><div class="task-text done">Exercícios de grafos</div><div style="font-size:11px;color:var(--text-muted);">Prática</div></div>
+          <span class="task-time">45min</span>
+        </div>
+        <div class="task-item">
+          <div class="check-circle"></div>
+          <div><div class="task-text">Cálculo — Integrais</div><div style="font-size:11px;color:var(--text-muted);">Teoria</div></div>
+          <span class="task-time">40min</span>
+        </div>
+        <div class="task-item">
+          <div class="check-circle"></div>
+          <div><div class="task-text">Banco de dados: SQL</div><div style="font-size:11px;color:var(--text-muted);">Exercícios</div></div>
+          <span class="task-time">30min</span>
+        </div>
+        <div class="task-item">
+          <div class="check-circle"></div>
+          <div><div class="task-text">Revisão de POO</div><div style="font-size:11px;color:var(--text-muted);">Programação OO</div></div>
+          <span class="task-time">25min</span>
+        </div>
+        <div style="margin-top:16px;" class="section-title">Semana de progresso</div>
+        <div class="plan-week">
+          <div class="plan-day"><span class="d-letter">D</span><span class="d-tasks">-</span></div>
+          <div class="plan-day today"><span class="d-letter">S</span><span class="d-tasks">3/5</span></div>
+          <div class="plan-day has-task"><span class="d-letter">T</span><span class="d-tasks">4</span></div>
+          <div class="plan-day has-task"><span class="d-letter">Q</span><span class="d-tasks">3</span></div>
+          <div class="plan-day has-task"><span class="d-letter">Q</span><span class="d-tasks">4</span></div>
+          <div class="plan-day rest"><span class="d-letter">S</span><span class="d-tasks">rest</span></div>
+          <div class="plan-day rest"><span class="d-letter">S</span><span class="d-tasks">rest</span></div>
+        </div>
+        <div style="height:80px;"></div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active"><span class="nav-icon">⊞</span><span>Início</span></div>
+        <div class="nav-item" onclick="showScreen('edit')"><span class="nav-icon">📋</span><span>Planos</span></div>
+        <div class="nav-item"><span class="nav-icon">📊</span><span>Progresso</span></div>
+        <div class="nav-item"><span class="nav-icon">👤</span><span>Perfil</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 5: CREATE PLAN -->
+  <div id="screen-create" class="screen">
+    <div class="phone" style="display:flex;flex-direction:column;">
+      <div class="pill-bar" style="margin-top:10px;"></div>
+      <div class="header-bar">
+        <button class="back-btn" onclick="showScreen('dashboard')">←</button>
+        <span style="font-size:16px;font-weight:600;color:var(--text);">Novo plano</span>
+        <div style="width:32px;"></div>
+      </div>
+      <div class="content slide-in" style="overflow-y:auto;flex:1;">
+        <div class="ai-bubble" style="margin-bottom:20px;">
+          <span style="font-size:12px;font-weight:600;color:var(--purple-dark);">✦ IA EducaIA</span><br>
+          Me conta o que você precisa e eu crio seu plano completo em segundos! 🚀
+        </div>
+        <div class="input-label">🎯 Qual é seu objetivo?</div>
+        <input class="input-field" placeholder="Ex: Passar na prova de Cálculo em 2 semanas" />
+        <div class="input-label">⏰ Quantas horas por dia?</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <div class="option-pill selected" style="flex:1;padding:10px;justify-content:center;" onclick="selectTimeOption(this)">
+            <div style="text-align:center;"><div class="label">1–2h</div><div class="sub">Leve</div></div>
+          </div>
+          <div class="option-pill" style="flex:1;padding:10px;justify-content:center;" onclick="selectTimeOption(this)">
+            <div style="text-align:center;"><div class="label">2–4h</div><div class="sub">Moderado</div></div>
+          </div>
+          <div class="option-pill" style="flex:1;padding:10px;justify-content:center;" onclick="selectTimeOption(this)">
+            <div style="text-align:center;"><div class="label">4h+</div><div class="sub">Intensivo</div></div>
+          </div>
+        </div>
+        <div class="input-label">📚 Dificuldade do conteúdo?</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <div class="option-pill" style="flex:1;padding:10px;justify-content:center;" onclick="selectDiffOption(this)">
+            <div style="text-align:center;"><div class="label">Fácil</div><div class="sub">Revisão</div></div>
+          </div>
+          <div class="option-pill selected" style="flex:1;padding:10px;justify-content:center;" onclick="selectDiffOption(this)">
+            <div style="text-align:center;"><div class="label">Médio</div><div class="sub">Aprender</div></div>
+          </div>
+          <div class="option-pill" style="flex:1;padding:10px;justify-content:center;" onclick="selectDiffOption(this)">
+            <div style="text-align:center;"><div class="label">Difícil</div><div class="sub">Dominar</div></div>
+          </div>
+        </div>
+        <div class="input-label">📅 Prazo disponível?</div>
+        <input class="input-field" placeholder="Ex: 15 dias, 1 mês, 2 semanas..." />
+        <div class="input-label">📝 Matérias / tópicos (opcional)</div>
+        <input class="input-field" placeholder="Ex: Integrais, Derivadas, Limites..." />
+        <div style="height:16px;"></div>
+      </div>
+      <div style="padding:0 20px 24px;">
+        <button class="cta-btn" onclick="showScreen('loading')">✦ Gerar plano com IA</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 6: LOADING -->
+  <div id="screen-loading" class="screen">
+    <div class="phone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div class="pill-bar" style="margin-top:10px;align-self:stretch;"></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 30px;text-align:center;">
+        <div style="width:90px;height:90px;border-radius:50%;background:var(--purple-light);display:flex;align-items:center;justify-content:center;margin-bottom:28px;border:2px solid rgba(127,119,221,0.2);">
+          <svg width="44" height="44" viewBox="0 0 44 44">
+            <circle cx="22" cy="22" r="18" fill="none" stroke="#AFA9EC" stroke-width="2"/>
+            <path d="M22 4 A18 18 0 0 1 40 22" fill="none" stroke="#7F77DD" stroke-width="3" stroke-linecap="round">
+              <animateTransform attributeName="transform" type="rotate" from="0 22 22" to="360 22 22" dur="1.2s" repeatCount="indefinite"/>
+            </path>
+            <text x="22" y="27" text-anchor="middle" font-size="14">✦</text>
+          </svg>
+        </div>
+        <h2 style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:10px;letter-spacing:-0.5px;">A IA está criando<br>seu plano personalizado...</h2>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:32px;">Analisando seu objetivo, tempo disponível e nível de dificuldade</p>
+        <div style="display:flex;gap:8px;margin-bottom:32px;">
+          <div class="loading-dot"></div>
+          <div class="loading-dot"></div>
+          <div class="loading-dot"></div>
+        </div>
+        <div style="width:100%;background:var(--gray-bg);border-radius:var(--radius);padding:16px;text-align:left;">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">O que a IA está fazendo:</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:13px;color:var(--success);">✓ Identificando seu perfil de aprendizado</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:13px;color:var(--success);">✓ Mapeando conteúdos prioritários</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:13px;color:var(--purple);">⋯ Criando cronograma semanal</div>
+          <div style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--text-light);">○ Adicionando sugestões de estudo</div>
+        </div>
+        <button class="cta-btn" style="margin-top:24px;background:transparent;color:var(--text-muted);border:1.5px solid var(--border);font-size:14px;" onclick="showScreen('success')">Pular animação →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 7: SUCCESS -->
+  <div id="screen-success" class="screen">
+    <div class="phone" style="display:flex;flex-direction:column;">
+      <div class="pill-bar" style="margin-top:10px;"></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding:32px 20px 20px;text-align:center;">
+        <div class="success-icon slide-in">🎉</div>
+        <div class="tag" style="margin-bottom:12px;">Plano criado com sucesso!</div>
+        <h2 style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px;letter-spacing:-0.5px;">Seu plano está pronto, Ana! 🚀</h2>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:24px;">A IA montou um plano de 14 dias com tudo organizado para você passar na prova de Cálculo.</p>
+        <div style="background:var(--gray-bg);border-radius:var(--radius);padding:16px;width:100%;text-align:left;margin-bottom:20px;border:1px solid var(--border);">
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;">Resumo do seu plano</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;"><span style="color:var(--text-muted);">Duração</span><span style="font-weight:500;color:var(--text);">14 dias</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;"><span style="color:var(--text-muted);">Sessões por dia</span><span style="font-weight:500;color:var(--text);">2–3 sessões</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;"><span style="color:var(--text-muted);">Total de tarefas</span><span style="font-weight:500;color:var(--text);">38 tarefas</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--text-muted);">Horas estimadas</span><span style="font-weight:500;color:var(--text);">~28 horas</span></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:24px;">
+          <span class="chip">📐 Limites</span>
+          <span class="chip">📐 Derivadas</span>
+          <span class="chip">📐 Integrais</span>
+          <span class="chip">🎯 Exercícios</span>
+          <span class="chip">📝 Revisões</span>
+        </div>
+      </div>
+      <div style="padding:0 20px 24px;display:flex;flex-direction:column;gap:10px;">
+        <button class="cta-btn success-btn" onclick="showScreen('edit')">Ver meu plano completo</button>
+        <button class="cta-btn secondary" onclick="showScreen('dashboard')">Ir para o dashboard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 8: EDIT PLAN -->
+  <div id="screen-edit" class="screen">
+    <div class="phone" style="display:flex;flex-direction:column;">
+      <div class="pill-bar" style="margin-top:10px;"></div>
+      <div class="header-bar">
+        <button class="back-btn" onclick="showScreen('dashboard')">←</button>
+        <span style="font-size:15px;font-weight:600;color:var(--text);">Plano de Cálculo</span>
+        <button style="border:none;background:none;font-size:14px;color:var(--purple);font-weight:500;cursor:pointer;">Editar</button>
+      </div>
+      <div style="padding:0 20px 10px;">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;">
+          <span class="chip">14 dias</span>
+          <span class="chip time-chip">⏰ 1–2h/dia</span>
+          <span class="chip diff-chip">Médio</span>
+        </div>
+        <div class="progress-bar" style="margin-bottom:6px;"><div class="progress-fill" style="width:21%;"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);">
+          <span>21% concluído</span><span>8/38 tarefas</span>
+        </div>
+      </div>
+      <div class="content slide-in" style="overflow-y:auto;flex:1;">
+        <div class="day-tag green">Semana 1 · Dia 1 — Concluído ✓</div>
+        <div class="task-item">
+          <div class="check-circle done"></div>
+          <div><div class="task-text done">Conceito de limite — teoria</div></div>
+          <span class="task-time">30min</span>
+        </div>
+        <div class="task-item">
+          <div class="check-circle done"></div>
+          <div><div class="task-text done">Lista de exercícios — limites</div></div>
+          <span class="task-time">45min</span>
+        </div>
+        <div class="day-tag" style="margin-top:16px;">Semana 1 · Dia 2 — Hoje</div>
+        <div class="task-item">
+          <div class="check-circle done"></div>
+          <div><div class="task-text done">Definição de derivada</div></div>
+          <span class="task-time">25min</span>
+        </div>
+        <div class="task-item">
+          <div class="check-circle"></div>
+          <div><div class="task-text">Regras de derivação</div><div style="font-size:11px;color:var(--purple);">● Em andamento</div></div>
+          <span class="task-time">40min</span>
+        </div>
+        <div class="task-item">
+          <div class="check-circle"></div>
+          <div><div class="task-text">Exercícios — derivadas básicas</div></div>
+          <span class="task-time">35min</span>
+        </div>
+        <div class="day-tag" style="margin-top:16px;">Semana 1 · Dia 3 — Amanhã</div>
+        <div class="task-item">
+          <div class="check-circle"></div>
+          <div><div class="task-text">Derivadas de funções compostas</div></div>
+          <span class="task-time">30min</span>
+        </div>
+        <div class="task-item">
+          <div class="check-circle"></div>
+          <div><div class="task-text">Regra da cadeia</div></div>
+          <span class="task-time">40min</span>
+        </div>
+        <div class="task-item">
+          <div class="check-circle"></div>
+          <div><div class="task-text">Simulado — derivadas</div></div>
+          <span class="task-time">50min</span>
+        </div>
+        <div style="height:80px;"></div>
+      </div>
+      <div style="padding:0 20px 24px;">
+        <button class="cta-btn" onclick="showScreen('dashboard')">Continuar estudando →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 9: EMPTY STATE -->
+  <div id="screen-empty" class="screen">
+    <div class="phone" style="display:flex;flex-direction:column;">
+      <div class="pill-bar" style="margin-top:10px;"></div>
+      <div class="header-bar">
+        <div>
+          <div style="font-size:12px;color:var(--text-muted);">Bom dia ✨</div>
+          <div style="font-size:16px;font-weight:600;color:var(--text);">Pedro Silva</div>
+        </div>
+        <div class="avatar-ring" style="width:36px;height:36px;font-size:13px;background:var(--gray-bg);border:1px solid var(--border);">PS</div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;">
+        <div style="font-size:72px;margin-bottom:20px;opacity:0.8;">📭</div>
+        <h2 style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:8px;letter-spacing:-0.5px;">Nenhum plano ainda</h2>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:8px;">Você ainda não tem um plano de estudos. Crie um agora e a IA cuida de tudo para você!</p>
+        <div style="background:var(--purple-light);border-radius:var(--radius);padding:16px;margin:20px 0;text-align:left;border:1px solid rgba(127,119,221,0.15);">
+          <div style="font-size:13px;font-weight:600;color:var(--purple-dark);margin-bottom:10px;">✦ Com EducaIA você terá:</div>
+          <div style="font-size:13px;color:var(--purple-dark);line-height:1.8;">
+            📅 Cronograma semanal automático<br>
+            ✅ Tarefas organizadas por prioridade<br>
+            🎯 Sugestões personalizadas<br>
+            📊 Acompanhamento de progresso
+          </div>
+        </div>
+        <button class="cta-btn" onclick="showScreen('create')">+ Criar meu primeiro plano</button>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:10px;">Leva menos de 2 minutos ⚡</p>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item active"><span class="nav-icon">⊞</span><span>Início</span></div>
+        <div class="nav-item"><span class="nav-icon">📋</span><span>Planos</span></div>
+        <div class="nav-item"><span class="nav-icon">📊</span><span>Progresso</span></div>
+        <div class="nav-item"><span class="nav-icon">👤</span><span>Perfil</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 10: ERROR -->
+  <div id="screen-error" class="screen">
+    <div class="phone" style="display:flex;flex-direction:column;">
+      <div class="pill-bar" style="margin-top:10px;"></div>
+      <div class="header-bar">
+        <button class="back-btn" onclick="showScreen('create')">←</button>
+        <span style="font-size:16px;font-weight:600;color:var(--text);">Gerar plano</span>
+        <div style="width:32px;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+        <div class="error-icon slide-in">⚠️</div>
+        <h2 style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:8px;letter-spacing:-0.5px;">Algo deu errado</h2>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:24px;">A IA não conseguiu criar seu plano agora. Isso pode ser uma instabilidade temporária.</p>
+        <div style="background:var(--danger-light);border:1px solid rgba(216,90,48,0.15);border-radius:var(--radius);padding:14px;width:100%;text-align:left;margin-bottom:24px;">
+          <div style="font-size:12px;font-weight:600;color:var(--danger);margin-bottom:4px;">Código do erro</div>
+          <div style="font-size:12px;color:var(--danger);font-family:monospace;">ERR_AI_TIMEOUT · 503</div>
+        </div>
+        <button class="cta-btn" style="margin-bottom:10px;" onclick="showScreen('loading')">↺ Tentar novamente</button>
+        <button class="cta-btn secondary" onclick="showScreen('create')">Voltar e editar</button>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:16px;line-height:1.5;">Se o problema persistir, <span style="color:var(--purple);">fale com o suporte</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 11: RETURN -->
+  <div id="screen-return" class="screen">
+    <div class="phone" style="display:flex;flex-direction:column;">
+      <div class="pill-bar" style="margin-top:10px;"></div>
+      <div class="header-bar">
+        <div>
+          <div style="font-size:12px;color:var(--text-muted);">Bem-vinda de volta! 🎉</div>
+          <div style="font-size:16px;font-weight:600;color:var(--text);">Ana Clara</div>
+        </div>
+        <div class="streak-badge">
+          <span style="font-size:14px;">🔥</span>
+          <span style="font-size:13px;font-weight:600;color:#BA7517;">8 dias</span>
+        </div>
+      </div>
+      <div class="content slide-in" style="overflow-y:auto;flex:1;">
+        <div style="background:var(--purple-light);border-radius:var(--radius);padding:16px;margin-bottom:16px;border:1px solid rgba(127,119,221,0.15);">
+          <div style="font-size:12px;font-weight:600;color:var(--purple-dark);margin-bottom:4px;">✦ IA EducaIA</div>
+          <div style="font-size:14px;color:var(--purple-darker);line-height:1.5;">Você ficou 1 dia sem estudar. Sem stress! Ajustei seu plano para compensar hoje 💪</div>
+        </div>
+        <div class="section-title">Continuar de onde parou</div>
+        <div class="card-white" style="border-left:3px solid var(--purple);padding-left:14px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div style="font-size:14px;font-weight:600;color:var(--text);">Plano de Cálculo</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Dia 5 de 14 · Derivadas compostas</div>
+              <div style="display:flex;gap:6px;margin-top:8px;">
+                <span class="chip" style="font-size:11px;">21% concluído</span>
+              </div>
+            </div>
+            <button style="background:var(--purple);color:white;border:none;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="showScreen('edit')">Continuar</button>
+          </div>
+          <div class="progress-bar" style="margin-top:10px;"><div class="progress-fill" style="width:21%;"></div></div>
+        </div>
+        <div class="section-title" style="margin-top:4px;">Tarefas de hoje (ajustadas)</div>
+        <div class="task-item">
+          <div class="check-circle"></div>
+          <div><div class="task-text">Regra da cadeia</div><div style="font-size:11px;color:var(--text-muted);">Retomada do dia anterior</div></div>
+          <span class="task-time">40min</span>
+        </div>
+        <div class="task-item">
+          <div class="check-circle"></div>
+          <div><div class="task-text">Derivadas de funções compostas</div></div>
+          <span class="task-time">30min</span>
+        </div>
+        <div class="task-item">
+          <div class="check-circle"></div>
+          <div><div class="task-text">Mini-simulado adaptativo</div><div style="font-size:11px;color:var(--purple);">✦ Gerado pela IA</div></div>
+          <span class="task-time">25min</span>
+        </div>
+        <div style="background:var(--success-light);border-radius:var(--radius);padding:14px;margin-top:8px;border:1px solid rgba(29,158,117,0.15);">
+          <div style="font-size:13px;color:var(--success);font-weight:500;">🏆 Conquista desbloqueada: <strong>Persistente!</strong></div>
+          <div style="font-size:12px;color:var(--success);margin-top:2px;opacity:0.8;">Você voltou depois de uma pausa. Isso é resiliência!</div>
+        </div>
+        <div style="height:80px;"></div>
+      </div>
+      <div style="padding:0 20px 24px;">
+        <button class="cta-btn" onclick="showScreen('edit')">Começar sessão de hoje →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let obStep = 1;
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const s = document.getElementById('screen-' + id);
+  if (s) { s.classList.add('active'); const c = s.querySelector('.slide-in'); if(c){c.style.animation='none';void c.offsetWidth;c.style.animation='';} }
+  const map = {discovery:0,signup:1,onboarding:2,dashboard:3,create:4,loading:5,success:6,edit:7,empty:8,error:9,return:10};
+  const btns = document.querySelectorAll('.nav-btn');
+  if(map[id]!==undefined) btns[map[id]].classList.add('active');
+  if(id==='loading') { setTimeout(()=>showScreen('success'), 3200); }
+}
+function selectPill(el) {
+  el.closest('.content, div').querySelectorAll('.option-pill').forEach(p=>p.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectTimeOption(el) {
+  const parent = el.parentElement;
+  parent.querySelectorAll('.option-pill').forEach(p=>p.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectDiffOption(el) {
+  const parent = el.parentElement;
+  parent.querySelectorAll('.option-pill').forEach(p=>p.classList.remove('selected'));
+  el.classList.add('selected');
+}
+const obSteps = [
+  {dots:[true,false,false], title:'O que você está estudando?', sub:'Isso ajuda a IA a personalizar seu plano', icon:'🎓', btn:'Continuar'},
+  {dots:[false,true,false], title:'Qual seu maior desafio?', sub:'Vamos focar onde você mais precisa', icon:'💪', btn:'Continuar', opts:[{icon:'📅',l:'Falta de organização',s:'Não sei por onde começar'},{icon:'⏱️',l:'Pouco tempo disponível',s:'Agenda muito cheia'},{icon:'🧠',l:'Dificuldade no conteúdo',s:'Matéria muito complexa'},{icon:'🎯',l:'Falta de foco',s:'Me distraio facilmente'}]},
+  {dots:[false,false,true], title:'Quando é sua próxima prova?', sub:'A IA vai priorizar o que for mais urgente', icon:'📅', btn:'Criar meu plano', opts:[{icon:'🔴',l:'Essa semana',s:'Urgente — preciso estudar já'},{icon:'🟡',l:'Próximas 2 semanas',s:'Tenho algum tempo'},{icon:'🟢',l:'Próximo mês',s:'Tempo razoável'},{icon:'📆',l:'Mais de 1 mês',s:'Estou me preparando com antecedência'}]}
+];
+function nextOnboarding() {
+  if(obStep === 1) { obStep = 2; renderObStep(); }
+  else if(obStep === 2) { obStep = 3; renderObStep(); }
+  else { showScreen('dashboard'); obStep = 1; }
+}
+function renderObStep() {
+  const step = obSteps[obStep-1];
+  const dots = ['ob-d1','ob-d2','ob-d3'];
+  dots.forEach((d,i)=>{ const el = document.getElementById(d); el.className = 'dot' + (step.dots[i]?' active':''); });
+  const content = document.getElementById('onb-content');
+  content.style.animation='none'; void content.offsetWidth; content.style.animation='slideIn 0.28s cubic-bezier(0.34,1.2,0.64,1) both';
+  let html = `<div class="onb-step"><div class="onb-icon">${step.icon}</div><h2 style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:10px;letter-spacing:-0.5px;">${step.title}</h2><p style="font-size:14px;color:var(--text-muted);margin-bottom:24px;line-height:1.6;">${step.sub}</p></div>`;
+  if(step.opts) {
+    step.opts.forEach(o=>{ html += `<div class="option-pill" onclick="selectPill(this)"><div class="icon">${o.icon}</div><div><div class="label">${o.l}</div><div class="sub">${o.s}</div></div></div>`; });
+  } else {
+    html += `<div class="option-pill selected" onclick="selectPill(this)"><div class="icon">💻</div><div><div class="label">Ciência da Computação</div><div class="sub">Programação, algoritmos, etc</div></div></div><div class="option-pill" onclick="selectPill(this)"><div class="icon">⚕️</div><div><div class="label">Medicina / Saúde</div><div class="sub">Anatomia, fisiologia, etc</div></div></div><div class="option-pill" onclick="selectPill(this)"><div class="icon">⚖️</div><div><div class="label">Direito</div><div class="sub">Legislação, jurisprudência, etc</div></div></div><div class="option-pill" onclick="selectPill(this)"><div class="icon">📐</div><div><div class="label">Engenharia</div><div class="sub">Exatas, cálculo, física</div></div></div>`;
+  }
+  content.innerHTML = html;
+  document.getElementById('ob-btn').textContent = step.btn;
+}
+</script>
+</body>
+</html>
